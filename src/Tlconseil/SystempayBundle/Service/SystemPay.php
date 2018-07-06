@@ -128,7 +128,7 @@ class SystemPay
      * @param Request $request
      * @return bool
      */
-    public function responseHandler(Request $request)
+   public function responseHandler(Request $request)
     {
         $query = $request->request->all();
 
@@ -139,14 +139,20 @@ class SystemPay
             unset ($query['signature']);
             if ($signature == $this->getSignature($query))
             {
+                $return = false;
+
                 $transaction = $this->findTransaction($request);
                 $transaction->setStatus($query['vads_trans_status']);
                 if ($query['vads_trans_status'] == "AUTHORISED")
+                {
                     $transaction->setPaid(true);
+                    $return = true;
+                }
                 $transaction->setUpdatedAt(new \DateTime());
                 $transaction->setLogResponse(json_encode($query));
                 $this->entityManager->flush();
-                return true;
+                
+                return $return;
             }
         }
         return false;
